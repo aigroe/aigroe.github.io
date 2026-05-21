@@ -1,2 +1,337 @@
-# aigroe.github.io
-Notion countdown
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Countdown Timer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffd4d4;
+    --surface: rgba(255,255,255,0.45);
+    --border: rgba(162,15,89,0.18);
+    --text: #a20f59;
+    --muted: rgba(162,15,89,0.5);
+    --accent: #a20f59;
+    --accent-dim: rgba(162,15,89,0.1);
+    --radius: 16px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px 32px;
+    position: relative;
+  }
+
+  .edit-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .edit-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  .event-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .event-date-display {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  .units {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .unit {
+    text-align: center;
+    background: var(--accent-dim);
+    border-radius: 12px;
+    padding: 20px 12px 16px;
+  }
+
+  .unit-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--text);
+    display: block;
+    letter-spacing: -0.02em;
+  }
+
+  .unit-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 8px;
+    display: block;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 20px;
+  }
+
+  .progress-wrap {
+    height: 3px;
+    background: rgba(162,15,89,0.12);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 1s linear;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .done-msg {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--accent);
+    text-align: center;
+    padding: 16px 0;
+  }
+
+  .edit-panel {
+    display: none;
+    border-top: 1px solid var(--border);
+    margin-top: 24px;
+    padding-top: 20px;
+  }
+  .edit-panel.open { display: block; }
+
+  .edit-panel label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    margin-top: 14px;
+  }
+  .edit-panel label:first-child { margin-top: 0; }
+
+  .edit-panel input[type="text"],
+  .edit-panel input[type="datetime-local"] {
+    width: 100%;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    color-scheme: light;
+  }
+  .edit-panel input::placeholder { color: var(--muted); }
+  .edit-panel input:focus { border-color: var(--accent); }
+
+  .save-btn {
+    width: 100%;
+    margin-top: 16px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #ffd4d4;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .save-btn:hover { opacity: 0.85; }
+</style>
+</head>
+<body>
+<div class="card">
+  <button class="edit-btn" onclick="toggleEdit()" id="editBtn">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    Edit
+  </button>
+
+  <div class="event-name">next visit !!!</div>
+  <div class="event-date-display" id="eventDateDisplay">—</div>
+
+  <div id="countdownDisplay">
+    <div class="units">
+      <div class="unit"><span class="unit-num" id="weeks">00</span><span class="unit-label">weeks</span></div>
+      <div class="unit"><span class="unit-num" id="days">00</span><span class="unit-label">days</span></div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    <div class="progress-label"><span id="progressStart"></span><span id="progressPct">0%</span></div>
+  </div>
+  <div id="doneMsg" class="done-msg" style="display:none">🎉 The day has arrived!</div>
+
+  <div class="edit-panel" id="editPanel">
+    <label>Target date</label>
+    <input type="datetime-local" id="inputDate" />
+    <label>Start counting from (optional)</label>
+    <input type="datetime-local" id="inputStart" />
+    <button class="save-btn" onclick="save()">Save</button>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'cdtimer_v2';
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+  }
+  function persist(data) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+  }
+
+  function pad(n) { return String(Math.floor(n)).padStart(2, '0'); }
+
+  function fmt(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function toLocalInput(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const off = d.getTimezoneOffset() * 60000;
+    return new Date(d - off).toISOString().slice(0, 16);
+  }
+
+  function render(data) {
+    const target = data.target ? new Date(data.target).getTime() : null;
+    const start = data.start ? new Date(data.start).getTime() : null;
+
+    document.getElementById('eventDateDisplay').textContent = target ? fmt(data.target) : '—';
+    if (data.target) document.getElementById('inputDate').value = toLocalInput(data.target);
+    if (data.start) document.getElementById('inputStart').value = toLocalInput(data.start);
+
+    tick(target, start);
+  }
+
+  let _interval = null;
+
+  function tick(target, start) {
+    if (_interval) clearInterval(_interval);
+    if (!target) return;
+
+    function update() {
+      const now = Date.now();
+      const diff = target - now;
+
+      if (diff <= 0) {
+        document.getElementById('countdownDisplay').style.display = 'none';
+        document.getElementById('doneMsg').style.display = 'block';
+        clearInterval(_interval);
+        return;
+      }
+
+      document.getElementById('countdownDisplay').style.display = 'block';
+      document.getElementById('doneMsg').style.display = 'none';
+
+      const totalDays = Math.floor(diff / 86400000);
+      const weeks = Math.floor(totalDays / 7);
+      const days = totalDays % 7;
+
+      document.getElementById('weeks').textContent = pad(weeks);
+      document.getElementById('days').textContent = pad(days);
+
+      const refStart = start || (target - 365 * 86400000);
+      const total = target - refStart;
+      const elapsed = Math.max(0, now - refStart);
+      const pct = total > 0 ? Math.min(100, (elapsed / total) * 100) : 0;
+
+      document.getElementById('progressBar').style.width = pct.toFixed(1) + '%';
+      document.getElementById('progressPct').textContent = pct.toFixed(0) + '%';
+      document.getElementById('progressStart').textContent = start ? fmt(start) : '';
+    }
+
+    update();
+    _interval = setInterval(update, 60000);
+  }
+
+  function toggleEdit() {
+    const panel = document.getElementById('editPanel');
+    const btn = document.getElementById('editBtn');
+    const open = panel.classList.toggle('open');
+    btn.innerHTML = open
+      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg> Close`
+      : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit`;
+  }
+
+  function save() {
+    const dateVal = document.getElementById('inputDate').value;
+    const startVal = document.getElementById('inputStart').value;
+
+    if (!dateVal) { alert('Please pick a target date.'); return; }
+
+    const data = {
+      target: new Date(dateVal).toISOString(),
+      start: startVal ? new Date(startVal).toISOString() : null,
+    };
+    persist(data);
+    render(data);
+    toggleEdit();
+  }
+
+  render(load());
+</script>
+</body>
+</html>
